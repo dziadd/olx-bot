@@ -110,6 +110,15 @@ async def pomoc(ctx):
     embed.add_field(name="!status", value="Wyświetla stan serwera bota.", inline=False)
     await ctx.send(embed=embed)
 
+@bot.command(name="wl")
+async def whitelist_dodaj(ctx, *, slowo: str = None):
+    if not slowo:
+        await ctx.send("Musisz podać słowo! Użycie: `!wl iphone`")
+        return
+        
+    dodaj_do_wl(ctx.channel.id, slowo)
+    await ctx.send(f"✅ Słowo **{slowo}** dodane do Whitelisty")
+
 @tasks.loop(seconds=15)
 async def szukaj_okazji():
     global licznik_petli, browser_playwright
@@ -143,6 +152,15 @@ async def szukaj_okazji():
                 kanal_docelowy = bot.get_channel(id_kanalu)
                 if kanal_docelowy:
                     for oferta in nowe_oferty:
+                        
+                        # WHITELISTA
+                        lista_slow = pobierz_wl(id_kanalu)
+                        if lista_slow:
+                            tytul_maly = oferta['tytul'].lower()
+                            if not any(slowo in tytul_maly for slowo in lista_slow):
+                                dodaj_do_widzianych(oferta['link'])
+                                continue
+                              
                         embed = discord.Embed(
                             title=oferta['tytul'],
                             url=oferta['link'],
