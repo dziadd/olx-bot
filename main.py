@@ -109,6 +109,8 @@ async def pomoc(ctx):
     embed.add_field(name="!wyczysc", value="Usuwa WSZYSTKIE linki.", inline=False)
     embed.add_field(name="!status", value="Wyświetla stan serwera bota.", inline=False)
     embed.add_field(name="!wl [słowo]", value="Dodaje słowo do whitelisty.", inline=False)
+    embed.add_field(name="!wl_usun [słowo]", value="Usuwa podane słowo z whitelisty.", inline=False)
+    embed.add_field(name="!wl_wyczysc", value="Całkowicie czyści whitelistę na tym kanale.", inline=False)
     await ctx.send(embed=embed)
 
 @bot.command(name="wl")
