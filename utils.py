@@ -11,6 +11,7 @@ def init_db():
         cursor = conn.cursor()
         cursor.execute('''CREATE TABLE IF NOT EXISTS widziane (link TEXT PRIMARY KEY, ts REAL)''')
         cursor.execute('''CREATE TABLE IF NOT EXISTS obserwowane (link TEXT PRIMARY KEY, id_kanalu INTEGER)''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS whitelist (id_kanalu INTEGER, slowo TEXT)''')
         conn.commit()
 
 init_db()
@@ -68,6 +69,21 @@ def licz_widziane_oferty():
         cursor = conn.cursor()
         cursor.execute('SELECT COUNT(*) FROM widziane')
         return cursor.fetchone()[0]
+
+def dodaj_do_wl(id_kanalu, slowo):
+    conn = sqlite3.connect('olx_bot.db')
+    c = conn.cursor()
+    c.execute('INSERT INTO whitelist (id_kanalu, slowo) VALUES (?, ?)', (id_kanalu, slowo.lower()))
+    conn.commit()
+    conn.close()
+
+def pobierz_wl(id_kanalu):
+    conn = sqlite3.connect('olx_bot.db')
+    c = conn.cursor()
+    c.execute('SELECT slowo FROM whitelist WHERE id_kanalu = ?', (id_kanalu,))
+    wyniki = [row[0] for row in c.fetchall()]
+    conn.close()
+    return wyniki
 
 class OlxPrzyciski(discord.ui.View):
     def __init__(self, url_oferty):
