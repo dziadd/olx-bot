@@ -7,6 +7,7 @@ import time
 import datetime
 import os
 from dotenv import load_dotenv
+from utils import dodaj_do_wl, pobierz_wl
 
 load_dotenv()
 
