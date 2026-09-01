@@ -120,6 +120,30 @@ async def whitelist_dodaj(ctx, *, slowo: str = None):
     dodaj_do_wl(ctx.channel.id, slowo)
     await ctx.send(f"✅ Słowo **{slowo}** dodane do Whitelisty")
 
+@bot.command(name="wl_lista")
+async def whitelist_lista(ctx):
+    lista_slow = pobierz_wl(ctx.channel.id)
+    if not lista_slow:
+        await ctx.send("Whitelista na tym kanale jest pusta. Bot wysyła wszystkie ogłoszenia.")
+        return
+        
+    slowa_str = ", ".join(lista_slow)
+    await ctx.send(f"**Whitelista na tym kanale:**\n`{slowa_str}`")
+
+@bot.command(name="wl_usun")
+async def whitelist_usun(ctx, *, slowo: str = None):
+    if not slowo:
+        await ctx.send("Musisz podać słowo do usunięcia!")
+        return
+        
+    usun_z_wl(ctx.channel.id, slowo)
+    await ctx.send(f"Słowo **{slowo}** zostało usunięte z whitelisty.")
+
+@bot.command(name="wl_wyczysc")
+async def whitelist_wyczysc(ctx):
+    wyczysc_wl(ctx.channel.id)
+    await ctx.send("🧹 Cała whitelista dla tego kanału została wyczyszczona. Bot znów będzie wysyłał wszystko.")
+
 @tasks.loop(seconds=15)
 async def szukaj_okazji():
     global licznik_petli, browser_playwright
