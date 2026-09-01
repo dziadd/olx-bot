@@ -85,6 +85,21 @@ def pobierz_wl(id_kanalu):
     conn.close()
     return wyniki
 
+def usun_z_wl(id_kanalu, slowo):
+    conn = sqlite3.connect('olx_bot.db')
+    c = conn.cursor()
+    c.execute('DELETE FROM whitelist WHERE id_kanalu = ? AND slowo = ?', (id_kanalu, slowo.lower()))
+    conn.commit()
+    conn.close()
+
+def wyczysc_wl(id_kanalu):
+    conn = sqlite3.connect('olx_bot.db')
+    c = conn.cursor()
+    c.execute('DELETE FROM whitelist WHERE id_kanalu = ?', (id_kanalu,))
+    conn.commit()
+    conn.close()
+
+
 class OlxPrzyciski(discord.ui.View):
     def __init__(self, url_oferty):
         super().__init__(timeout=None)
