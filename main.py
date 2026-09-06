@@ -9,6 +9,7 @@ import os
 from dotenv import load_dotenv
 from utils import dodaj_do_wl, pobierz_wl, usun_z_wl, wyczysc_wl
 from utils import dodaj_do_bl, pobierz_bl, usun_z_bl, wyczysc_bl
+import re
 
 load_dotenv()
 
@@ -220,14 +221,14 @@ async def szukaj_okazji():
                         #whitelista
                         lista_slow_wl = pobierz_wl(id_kanalu)
                         if lista_slow_wl:
-                            if not any(slowo in tytul_maly for slowo in lista_slow_wl):
+                            if not any(re.search(r'\b' + re.escape(slowo) + r'\b', tytul_maly) for slowo in lista_slow_wl):
                                 dodaj_do_widzianych(oferta['link'])
                                 continue
 
                         #blacklista
                         lista_slow_bl = pobierz_bl(id_kanalu)
                         if lista_slow_bl:
-                            if any(slowo in tytul_maly for slowo in lista_slow_bl):
+                            if any(re.search(r'\b' + re.escape(slowo) + r'\b', tytul_maly) for slowo in lista_slow_bl):
                                 dodaj_do_widzianych(oferta['link'])
                                 continue
                               
