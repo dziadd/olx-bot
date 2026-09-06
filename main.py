@@ -8,6 +8,7 @@ import datetime
 import os
 from dotenv import load_dotenv
 from utils import dodaj_do_wl, pobierz_wl, usun_z_wl, wyczysc_wl
+from utils import dodaj_do_bl, pobierz_bl, usun_z_bl, wyczysc_bl
 
 load_dotenv()
 
@@ -77,12 +78,7 @@ async def usun_link(ctx, numer: int):
     link_do_usuniecia = klucze[numer - 1]
     usun_obserwowane(link_do_usuniecia)
     await ctx.send(f"Usunięto link numer {numer}.")
-
-@bot.command(name="wyczysc")
-async def wyczysc_linki(ctx):
-    wyczysc_obserwowane()
-    await ctx.send("🧹 Wszystkie obserwowane linki zostały usunięte z bazy.")
-
+  
 @bot.command(name="status")
 async def status_bota(ctx):
     ping = round(bot.latency * 1000)
@@ -99,18 +95,24 @@ async def status_bota(ctx):
 @bot.command(name="help")
 async def pomoc(ctx):
     embed = discord.Embed(
-        title="Pomoc - OLX Bot",
-        description="Lista dostępnych komend do zarządzania:",
+        title="🤖 Pomoc - OLX Bot",
+        description="Lista dostępnych komend do zarządzania botem:",
         color=discord.Color.orange()
     )
-    embed.add_field(name="!dodaj [link]", value="Dodaje link do bazy.", inline=False)
+    # Główne komendy
+    embed.add_field(name="!dodaj [link]", value="Dodaje nowy link do obserwowanych.", inline=False)
     embed.add_field(name="!lista", value="Wyświetla obserwowane linki.", inline=False)
-    embed.add_field(name="!usun [numer]", value="Usuwa konkretny link.", inline=False)
-    embed.add_field(name="!wyczysc", value="Usuwa WSZYSTKIE linki.", inline=False)
-    embed.add_field(name="!status", value="Wyświetla stan serwera bota.", inline=False)
+    embed.add_field(name="!usun [numer]", value="Usuwa konkretny link (wg numeru z !lista).", inline=False)
+    embed.add_field(name="!status", value="Wyświetla stan serwera i opóźnienie.", inline=False)
+    
+    # Whitelista
     embed.add_field(name="!wl [słowo]", value="Dodaje słowo do whitelisty.", inline=False)
-    embed.add_field(name="!wl_usun [słowo]", value="Usuwa podane słowo z whitelisty.", inline=False)
-    embed.add_field(name="!wl_wyczysc", value="Całkowicie czyści whitelistę na tym kanale.", inline=False)
+    embed.add_field(name="!wl_lista / !wl_usun / !wl_wyczysc", value="Zarządzanie whitelistą.", inline=False)
+    
+    # Blacklista
+    embed.add_field(name="!bl [słowo]", value="Dodaje słowo do blacklisty.", inline=False)
+    embed.add_field(name="!bl_lista / !bl_usun / !bl_wyczysc", value="Zarządzanie blacklistą.", inline=False)
+    
     await ctx.send(embed=embed)
 
 @bot.command(name="wl")
@@ -146,6 +148,39 @@ async def whitelist_wyczysc(ctx):
     wyczysc_wl(ctx.channel.id)
     await ctx.send("🧹 Cała whitelista dla tego kanału została wyczyszczona. Bot znów będzie wysyłał wszystko.")
 
+@bot.command(name="bl")
+async def blacklist_dodaj(ctx, *, slowo: str = None):
+    if not slowo:
+        await ctx.send("Musisz podać słowo! Użycie: `!bl uszkodzony`")
+        return
+        
+    dodaj_do_bl(ctx.channel.id, slowo)
+    await ctx.send(f"Słowo **{slowo}** dodane do Blacklisty! Bot ukryje ogłoszenia z tym słowem.")
+
+@bot.command(name="bl_lista")
+async def blacklist_lista(ctx):
+    lista_slow = pobierz_bl(ctx.channel.id)
+    if not lista_slow:
+        await ctx.send("Blacklista na tym kanale jest pusta.")
+        return
+        
+    slowa_str = ", ".join(lista_slow)
+    await ctx.send(f"**Blacklista na tym kanale:**\n`{slowa_str}`")
+
+@bot.command(name="bl_usun")
+async def blacklist_usun(ctx, *, slowo: str = None):
+    if not slowo:
+        await ctx.send("Musisz podać słowo do usunięcia! Użycie: `!bl_usun uszkodzony`")
+        return
+        
+    usun_z_bl(ctx.channel.id, slowo)
+    await ctx.send(f"🗑️ Słowo **{slowo}** zostało usunięte z blacklisty.")
+
+@bot.command(name="bl_wyczysc")
+async def blacklist_wyczysc(ctx):
+    wyczysc_bl(ctx.channel.id)
+    await ctx.send("🧹 Cała blacklista dla tego kanału została wyczyszczona.")
+
 @tasks.loop(seconds=15)
 async def szukaj_okazji():
     global licznik_petli, browser_playwright
@@ -179,12 +214,20 @@ async def szukaj_okazji():
                 kanal_docelowy = bot.get_channel(id_kanalu)
                 if kanal_docelowy:
                     for oferta in nowe_oferty:
-                        
-                        # WHITELISTA
-                        lista_slow = pobierz_wl(id_kanalu)
-                        if lista_slow:
-                            tytul_maly = oferta['tytul'].lower()
-                            if not any(slowo in tytul_maly for slowo in lista_slow):
+
+                        tytul_maly = oferta['tytul'].lower()
+
+                        #whitelista
+                        lista_slow_wl = pobierz_wl(id_kanalu)
+                        if lista_slow_wl:
+                            if not any(slowo in tytul_maly for slowo in lista_slow_wl):
+                                dodaj_do_widzianych(oferta['link'])
+                                continue
+
+                        #blacklista
+                        lista_slow_bl = pobierz_bl(id_kanalu)
+                        if lista_slow_bl:
+                            if any(slowo in tytul_maly for slowo in lista_slow_bl):
                                 dodaj_do_widzianych(oferta['link'])
                                 continue
                               
