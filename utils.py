@@ -12,6 +12,7 @@ def init_db():
         cursor.execute('''CREATE TABLE IF NOT EXISTS widziane (link TEXT PRIMARY KEY, ts REAL)''')
         cursor.execute('''CREATE TABLE IF NOT EXISTS obserwowane (link TEXT PRIMARY KEY, id_kanalu INTEGER)''')
         cursor.execute('''CREATE TABLE IF NOT EXISTS whitelist (id_kanalu INTEGER, slowo TEXT)''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS blacklist (id_kanalu INTEGER, slowo TEXT)''')
         conn.commit()
 
 init_db()
@@ -96,6 +97,35 @@ def wyczysc_wl(id_kanalu):
     conn = sqlite3.connect('olx_bot.db')
     c = conn.cursor()
     c.execute('DELETE FROM whitelist WHERE id_kanalu = ?', (id_kanalu,))
+    conn.commit()
+    conn.close()
+
+def dodaj_do_bl(id_kanalu, slowo):
+    conn = sqlite3.connect('olx_bot.db')
+    c = conn.cursor()
+    c.execute('INSERT INTO blacklist (id_kanalu, slowo) VALUES (?, ?)', (id_kanalu, slowo.lower()))
+    conn.commit()
+    conn.close()
+
+def pobierz_bl(id_kanalu):
+    conn = sqlite3.connect('olx_bot.db')
+    c = conn.cursor()
+    c.execute('SELECT slowo FROM blacklist WHERE id_kanalu = ?', (id_kanalu,))
+    wyniki = [row[0] for row in c.fetchall()]
+    conn.close()
+    return wyniki
+
+def usun_z_bl(id_kanalu, slowo):
+    conn = sqlite3.connect('olx_bot.db')
+    c = conn.cursor()
+    c.execute('DELETE FROM blacklist WHERE id_kanalu = ? AND slowo = ?', (id_kanalu, slowo.lower()))
+    conn.commit()
+    conn.close()
+
+def wyczysc_bl(id_kanalu):
+    conn = sqlite3.connect('olx_bot.db')
+    c = conn.cursor()
+    c.execute('DELETE FROM blacklist WHERE id_kanalu = ?', (id_kanalu,))
     conn.commit()
     conn.close()
 
